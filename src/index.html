@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Odin Todo</title>
+  </head>
+  <body>
+    <header class="bg-gray-600 flex justify-end">
+      <button class="text-white h-6 w-6 m-2 ml-auto js-add-task">
+        <i class="fas fa-plus-circle"></i>
+      </button>
+    </header>
+    <div class="flex flex-col sm:flex-row h-full">
+      <aside
+        class="bg-gray-300 w-full sm:w-1/6 order-last sm:order-first fixed bottom-0 sm:static sm:bottom-auto"
+      >
+        <ul class="flex justify-around sm:flex-col m-2 sm:m-4">
+          <li class="underline"><a href="#">Inbox</a></li>
+          <li><a href="#">Personal</a></li>
+          <li><a href="#">Work</a></li>
+        </ul>
+      </aside>
+      <main class="m-4">
+        <h2 class="mb-4">Inbox</h2>
+        <div class="js-tasks"></div>
+      </main>
+    </div>
+    <!-- modal -->
+    <div
+      class="fixed grid place-items-center top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 m-auto hidden js-modal"
+    >
+      <div class="relative bg-white rounded-md w-1/2 p-4">
+        <form id="add-task">
+          <div class="mb-2">
+            <label class="block" for="title">Title: </label>
+            <input
+              class="border-2 rounded-md border-gray-200"
+              type="text"
+              name="title"
+              id="title"
+              required
+            />
+          </div>
+          <div class="mb-2">
+            <label class="block" for="title">Description:</label>
+            <textarea
+              class="border-2 rounded-md border-gray-200"
+              name="description"
+              id="description"
+              cols="30"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="flex justify-between mb-2">
+            <div>
+              <label for="start">Due date:</label>
+              <input
+                class="border-2 rounded-md border-gray-200"
+                type="date"
+                id="date"
+                name="date"
+                value="2020-01-01"
+                min="2020-01-01"
+                max="2025-12-31"
+              />
+            </div>
+            <div>
+              <label for="priority">Prio</label>
+              <select
+                class="border-2 rounded-md border-gray-200 h-full"
+                name="priority"
+                id="priority"
+              >
+                <option value=""></option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-2"></div>
+          <div class="mb-2">
+            <button
+              class="border-2 border-gray-200 inline-block px-3 py-1 rounded-md hover:bg-gray-200"
+              type="submit"
+            >
+              Add
+            </button>
+          </div>
+        </form>
+        <button class="absolute top-1 right-3 cursor-pointer js-modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <script
+      src="https://kit.fontawesome.com/eab8c3459d.js"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
