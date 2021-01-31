@@ -2,30 +2,9 @@
 import "./bootstrap.css";
 import { v4 as uuid } from "uuid";
 
-// default project
-const data = {
-  inbox: [
-    {
-      title: "Code a little",
-      description: "Desc",
-      dueDate: "DueDate",
-      prio: "prio",
-    },
-    {
-      title: "Code a little more",
-      description: "Desc",
-      dueDate: "DueDate",
-      prio: "prio",
-    },
-  ],
-  personal: [
-    {
-      title: "Do the dishes",
-      description: "Desc",
-      dueDate: "DueDate",
-      prio: "prio",
-    },
-  ],
+// get items from local storage
+const data = JSON.parse(localStorage.getItem("data")) || {
+  inbox: [],
 };
 
 const DOM = (() => {
@@ -38,6 +17,7 @@ const DOM = (() => {
     document.getElementById("add-task-modal")
   );
   const taskProject = document.getElementById("task-project");
+  const projectTitle = document.getElementById("project-heading");
 
   const renderTasks = (tasks) => {
     tasksContainer.innerHTML = "";
@@ -73,17 +53,23 @@ const DOM = (() => {
     const projectElement = document.createElement("li");
     projectElement.classList.add("nav-item");
     const link = document.createElement("a");
-    link.classList.add("nav-link", `${index === 0 && "active"}`);
-    link.style.textTransform = "capitalize";
+    link.classList.add("nav-link", "text-capitalize");
+    index === 0 && link.classList.add("active");
     link.setAttribute("href", "#");
     link.textContent = project;
     projectElement.appendChild(link);
     projectsContainer.appendChild(projectElement);
   };
 
+  const renderNewContent = (menuItem) => {
+    projectTitle.textContent = menuItem;
+    DOM.renderTasks(data[menuItem]);
+  };
+
   return {
     renderTasks,
     renderProjects,
+    renderNewContent,
     addTask,
     taskForm,
     projectForm,
@@ -99,6 +85,7 @@ const projects = (() => {
       data[title.toLowerCase()] = [];
     }
     DOM.projectForm.reset();
+    localStorage.setItem("data", JSON.stringify(data));
     DOM.addModal.hide();
   };
   const updateProjectSelection = () => {
@@ -128,19 +115,24 @@ const tasks = (() => {
   return { createTask };
 })();
 
-DOM.renderTasks(data.inbox);
-
 // Submit new task
 DOM.taskForm.addEventListener("submit", (e) => {
+  const project = document.getElementById("task-project").value;
   e.preventDefault();
   tasks.createTask(
-    document.getElementById("task-project").value,
+    project,
     document.getElementById("task-title").value,
     document.getElementById("task-description").value,
     document.getElementById("task-date").value,
     document.getElementById("task-priority").value
   );
-  DOM.renderTasks(data.inbox);
+  localStorage.setItem("data", JSON.stringify(data));
+  DOM.renderTasks(data[project]);
+  DOM.renderNewContent(project);
+  document.querySelectorAll(".nav-link").forEach((link) => {
+    link.classList.remove("active");
+    link.innerHTML === project && link.classList.add("active");
+  });
 });
 
 // Submit new project
@@ -156,6 +148,21 @@ DOM.projectForm.addEventListener("submit", (e) => {
 DOM.renderProjects(Object.keys(data));
 // add projects
 
+// render inbox at the beginning
+DOM.renderTasks(data.inbox);
+
 // add an ability to select where new tasks goes - which project
 // render all project in the task form
-window.addEventListener("DOMContentLoaded", projects.updateProjectSelection);
+window.addEventListener("DOMContentLoaded", () => {
+  projects.updateProjectSelection();
+
+  // when clicking on menu item rerender the view
+  DOM.projectsContainer.addEventListener("click", (e) => {
+    const menuItem = e.target.innerHTML;
+    document
+      .querySelectorAll(".nav-link")
+      .forEach((link) => link.classList.remove("active"));
+    e.target.classList.contains("nav-link") && e.target.classList.add("active");
+    DOM.renderNewContent(menuItem);
+  });
+});
