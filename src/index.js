@@ -1,168 +1,237 @@
-// import "./style.css";
-import "./bootstrap.css";
+/*
+- ikvepimui: https://www.youtube.com/watch?v=JaMCxVWtW58
+
+- [ ] modals are not closing on X
+- [ ] per daug globaliai aprėpiau event'us pargrįžti prie tų kuriuos galiu iškart paimti
+*/
+
+// import "./tailwind.css";
+import "./style.css";
+import { tasks, projects, modals } from "./scripts";
 import { v4 as uuid } from "uuid";
 
-// get items from local storage
-const data = JSON.parse(localStorage.getItem("data")) || {
-  inbox: [],
-};
+(() => {
+  // DOM
+  // Values
+  const data = JSON.parse(localStorage.getItem("data")) || [
+    {
+      id: uuid(),
+      title: "inbox",
+      tasks: [],
+    },
+  ];
 
-const DOM = (() => {
-  const tasksContainer = document.querySelector(".js-tasks");
-  const addTask = document.getElementById("add-task");
-  const projectForm = document.getElementById("add-project");
-  const taskForm = document.getElementById("add-task");
-  const projectsContainer = document.getElementById("projects");
-  const addModal = new bootstrap.Modal(
-    document.getElementById("add-task-modal")
-  );
-  const taskProject = document.getElementById("task-project");
-  const projectTitle = document.getElementById("project-heading");
-
-  const renderTasks = (tasks) => {
-    tasksContainer.innerHTML = "";
-    tasks.map((task) => {
-      constructTask(task);
+  // Methods
+  const appendProjectOptions = (activeSelect) => {
+    const taskProject = document.getElementById("task-project");
+    taskProject.innerHTML = "";
+    projects.generateSelection(data, activeSelect).forEach((option) => {
+      taskProject.appendChild(option);
     });
   };
 
-  const constructTask = (task) => {
-    const taskWrapper = document.createElement("div");
-    taskWrapper.classList.add("form-check");
-    const input = document.createElement("input");
-    input.classList.add("form-check-input");
-    input.setAttribute("type", "checkbox");
-    input.setAttribute("id", task.id);
-    const label = document.createElement("label");
-    label.classList.add("form-check-label");
-    label.setAttribute("for", task.id);
-    label.textContent = task.title;
-    taskWrapper.appendChild(input);
-    taskWrapper.appendChild(label);
-    tasksContainer.appendChild(taskWrapper);
-  };
-
-  const renderProjects = (projects) => {
-    projectsContainer.innerHTML = "";
-    projects.map((project, index) => {
-      constructProject(project, index);
-    });
-  };
-
-  const constructProject = (project, index) => {
-    const projectElement = document.createElement("li");
-    projectElement.classList.add("nav-item");
-    const link = document.createElement("a");
-    link.classList.add("nav-link", "text-capitalize");
-    index === 0 && link.classList.add("active");
-    link.setAttribute("href", "#");
-    link.textContent = project;
-    projectElement.appendChild(link);
-    projectsContainer.appendChild(projectElement);
-  };
-
-  const renderNewContent = (menuItem) => {
-    projectTitle.textContent = menuItem;
-    DOM.renderTasks(data[menuItem]);
-  };
-
-  return {
-    renderTasks,
-    renderProjects,
-    renderNewContent,
-    addTask,
-    taskForm,
-    projectForm,
-    addModal,
-    projectsContainer,
-    taskProject,
-  };
-})();
-
-const projects = (() => {
-  const createProject = (title) => {
-    if (!Object.keys(data).indexOf(title.toLowerCase()) > -1) {
-      data[title.toLowerCase()] = [];
-    }
-    DOM.projectForm.reset();
+  const submitTask = (e) => {
+    e.preventDefault();
+    const project = document.getElementById("task-project").value;
+    tasks.create(
+      data,
+      project,
+      document.getElementById("task-title").value,
+      document.getElementById("task-description").value,
+      document.getElementById("task-date").value,
+      document.getElementById("task-priority").value
+    );
     localStorage.setItem("data", JSON.stringify(data));
-    DOM.addModal.hide();
-  };
-  const updateProjectSelection = () => {
-    DOM.taskProject.innerHTML = "";
-    Object.keys(data).map((project) => {
-      const option = document.createElement("option");
-      option.setAttribute("value", project);
-      option.textContent = project;
-      DOM.taskProject.appendChild(option);
-    });
-  };
-  return { createProject, updateProjectSelection };
-})();
-
-const tasks = (() => {
-  const task = (title, description, dueDate, prio) => {
-    const id = uuid();
-    return { id, title, description, dueDate, prio };
+    // modals.hideModal("addTask");
+    tasks.render(data, project);
+    projects.render(data);
   };
 
-  const createTask = (project, title, description, dueDate, prio) => {
-    const newTask = task(title, description, dueDate, prio);
-    data[project].push(newTask);
-    DOM.taskForm.reset();
-    DOM.addModal.hide();
+  const submitProject = (e) => {
+    e.preventDefault();
+    const title = document.getElementById("project-title").value;
+    const project = title.toLowerCase();
+    projects.create(data, project);
+    e.target.reset();
+    localStorage.setItem("data", JSON.stringify(data));
+    projects.render(data);
+    tasks.render(data, project);
+    projects.activate(project);
   };
-  return { createTask };
-})();
 
-// Submit new task
-DOM.taskForm.addEventListener("submit", (e) => {
-  const project = document.getElementById("task-project").value;
-  e.preventDefault();
-  tasks.createTask(
-    project,
-    document.getElementById("task-title").value,
-    document.getElementById("task-description").value,
-    document.getElementById("task-date").value,
-    document.getElementById("task-priority").value
-  );
-  localStorage.setItem("data", JSON.stringify(data));
-  DOM.renderTasks(data[project]);
-  DOM.renderNewContent(project);
-  document.querySelectorAll(".nav-link").forEach((link) => {
-    link.classList.remove("active");
-    link.innerHTML === project && link.classList.add("active");
+  // init
+  tasks.render(data, "inbox"); // inbox
+  projects.render(data);
+
+  // Events
+  document.addEventListener("submit", (e) => {
+    e.target.id === "add-project" && submitProject(e);
+    e.target.id === "add-task" && submitTask(e);
   });
-});
 
-// Submit new project
-DOM.projectForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const title = document.getElementById("project-title").value;
-  projects.createProject(title);
-  DOM.renderProjects(Object.keys(data));
-  projects.updateProjectSelection();
-});
+  document.addEventListener("click", (e) => {
+    if (!e.target.id) return;
+    if (e.target.id === "add-task-btn") {
+      modals.renderAddTask();
+      appendProjectOptions();
+      document.getElementById(
+        "task-date"
+      ).value = new Date().toISOString().substr(0, 10);
+    }
 
-// render project in the sidebar
-DOM.renderProjects(Object.keys(data));
-// add projects
+    e.target.id === "add-project" && modals.renderAddProject();
 
-// render inbox at the beginning
-DOM.renderTasks(data.inbox);
+    if (e.target.parentNode.parentNode.id === "projects") {
+      const activeProject =
+        e.target.tagName === "A"
+          ? e.target.dataset.project
+          : e.target.parentNode.dataset.project;
+      projects.activate(activeProject);
+      tasks.render(data, activeProject);
+    }
 
-// add an ability to select where new tasks goes - which project
-// render all project in the task form
-window.addEventListener("DOMContentLoaded", () => {
-  projects.updateProjectSelection();
+    // mark completed
+    if (e.target.classList.contains("js-complete")) {
+      tasks.complete(e, data);
+    }
 
-  // when clicking on menu item rerender the view
-  DOM.projectsContainer.addEventListener("click", (e) => {
-    const menuItem = e.target.innerHTML;
-    document
-      .querySelectorAll(".nav-link")
-      .forEach((link) => link.classList.remove("active"));
-    e.target.classList.contains("nav-link") && e.target.classList.add("active");
-    DOM.renderNewContent(menuItem);
+    // project edit btn
+    if (e.target.classList.contains("edit-project")) {
+      const activeProject = e.target.dataset.project;
+      // render modal
+      modals.renderEditProject(e);
+      // save button - update input value
+      document
+        .getElementById("edit-project-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const title = document.getElementById("project-title-edit").value;
+          console.log(title);
+          data.forEach((project) => {
+            if (project.title === activeProject) {
+              project.title = title;
+            }
+          });
+          localStorage.setItem("data", JSON.stringify(data));
+          modals.hide("editProject");
+          modals.container.innerHTML = "";
+          tasks.render(data, title);
+          projects.render(data);
+          appendProjectOptions();
+          projects.activate(title);
+        });
+
+      // remove button - remove selected project from data
+      document
+        .getElementById("remove-project")
+        .addEventListener("click", () => {
+          data.forEach((project, index) => {
+            if (project.title === activeProject) {
+              data.splice(index, 1);
+            }
+          });
+          localStorage.setItem("data", JSON.stringify(data));
+          modals.hide("editProject");
+          document.getElementById("modals").innerHTML = "";
+          tasks.render(data, "inbox");
+          projects.render(data);
+          appendProjectOptions();
+          projects.activate("inbox");
+        });
+    }
+
+    // review task
+    if (e.target.parentNode.classList.contains("js-task-review")) {
+      modals.renderEditTask(e.target.parentNode, data);
+      appendProjectOptions(e.target.parentNode.dataset.project);
+
+      // save button - update input value
+      const form = document.getElementById("edit-task-form");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        // get all the current values
+        const projectName = document.getElementById("task-project").value;
+        const title = document.getElementById("task-title").value;
+        const desc = document.getElementById("task-description").value;
+        const dueDate = document.getElementById("task-date").value;
+        const prio = document.getElementById("task-priority").value;
+        // find the task at hand
+        data.forEach((project) => {
+          if (project.title === projectName) {
+            project.tasks.forEach((task) => {
+              if (task.id === form.dataset.task) {
+                task.title = title;
+                task.description = desc;
+                task.dueDate = dueDate;
+                task.prio = prio;
+              }
+            });
+          } else {
+            // delete the task in the old project
+            project.tasks.forEach((task, index) => {
+              if (task.id === form.dataset.task) {
+                project.tasks.splice(index, 1);
+              }
+            });
+            // create in new location
+            submitTask(e);
+          }
+        });
+        // update it's values
+        localStorage.setItem("data", JSON.stringify(data));
+        modals.hideModal("editTask");
+        tasks.render(data, projectName);
+        projects.render(data);
+        appendProjectOptions();
+        projects.activate(projectName);
+      });
+
+      // remove button - remove selected task from data
+      document.getElementById("remove-task").addEventListener("click", () => {
+        const projectName = document.getElementById("task-project").value;
+        data.forEach((project) => {
+          if (project.title === projectName) {
+            project.tasks.forEach((task, index) => {
+              if (task.id === form.dataset.task) {
+                project.tasks.splice(index, 1);
+              }
+            });
+          }
+        });
+        localStorage.setItem("data", JSON.stringify(data));
+        modals.hideModal("editTask");
+        tasks.render(data, "inbox");
+        projects.render(data);
+      });
+    }
+
+    // close edit project modal and remove
+    if (
+      e.target.classList.contains("btn-close") &&
+      e.target.closest("#edit-project-modal")
+    ) {
+      modals.hideModal("editProject");
+    }
+
+    // close task edit modal and remove
+    if (
+      e.target.classList.contains("btn-close") &&
+      e.target.closest("#edit-task-modal")
+    ) {
+      modals.hideModal("editTask");
+    }
+
+    if (
+      e.target.classList.contains("btn-close") &&
+      e.target.closest("#add-task-modal")
+    ) {
+      modals.hideModal("addTask");
+    }
+    if (
+      e.target.classList.contains("btn-close") &&
+      e.target.closest("#add-project-modal")
+    ) {
+      modals.hideModal("addProject");
+    }
   });
-});
+})();
