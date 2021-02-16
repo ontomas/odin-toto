@@ -1,14 +1,14 @@
 const modals = (() => {
   // DOM
   const container = document.getElementById("modals");
-  let addTask, addProject, editProject, editTask;
+  let modal;
 
   // Methods
   const renderAddTask = () => {
-    const modal = `
+    const output = `
       <div
       class="modal fade"
-      id="add-task-modal"
+      id="todo-modal"
       tabindex="-1"
       aria-labelledby="staticBackdropLabel"
       aria-hidden="true"
@@ -82,18 +82,16 @@ const modals = (() => {
         </div>
       </div>
     `;
-    container.innerHTML += modal;
-    addTask = new bootstrap.Modal(document.getElementById("add-task-modal"), {
-      backdrop: "static",
-    });
-    addTask.show();
+    container.innerHTML += output;
+    modal = new bootstrap.Modal(document.getElementById("todo-modal"));
+    modal.show();
   };
 
   const renderAddProject = () => {
-    const modal = `
+    const output = `
       <div
       class="modal fade"
-      id="add-project-modal"
+      id="todo-modal"
       tabindex="-1"
       aria-labelledby="staticBackdropLabel"
       aria-hidden="true"
@@ -129,21 +127,16 @@ const modals = (() => {
         </div>
       </div>
     `;
-    container.innerHTML += modal;
-    addProject = new bootstrap.Modal(
-      document.getElementById("add-project-modal"),
-      {
-        backdrop: "static",
-      }
-    );
-    addProject.show();
+    container.innerHTML += output;
+    modal = new bootstrap.Modal(document.getElementById("todo-modal"));
+    modal.show();
   };
 
   const renderEditProject = (e) => {
-    const modal = `
+    const output = `
           <div
           class="modal fade"
-          id="edit-project-modal"
+          id="todo-modal"
           tabindex="-1"
           aria-labelledby="staticBackdropLabel"
           aria-hidden="true"
@@ -185,26 +178,21 @@ const modals = (() => {
             </div>
           </div>
         `;
-    container.innerHTML += modal;
-    editProject = new bootstrap.Modal(
-      document.getElementById("edit-project-modal"),
-      {
-        backdrop: "static",
-      }
-    );
-    editProject.show();
+    container.innerHTML += output;
+    modal = new bootstrap.Modal(document.getElementById("todo-modal"));
+    modal.show();
   };
 
   const renderEditTask = (e, data) => {
-    let index, modal;
+    let index, output;
     data.forEach((project) => {
       if (project.title === e.dataset.project) {
         index = project.tasks.findIndex((task) => task.id === e.dataset.taskid);
         const task = project.tasks[index];
-        modal = `
+        output = `
           <div
           class="modal fade"
-          id="edit-task-modal"
+          id="todo-modal"
           tabindex="-1"
           aria-labelledby="staticBackdropLabel"
           aria-hidden="true"
@@ -285,20 +273,12 @@ const modals = (() => {
         `;
       }
     });
-    container.innerHTML += modal;
-    editTask = new bootstrap.Modal(document.getElementById(`edit-task-modal`), {
-      backdrop: "static",
-    });
-    editTask.show();
+    container.innerHTML += output;
+    modal = new bootstrap.Modal(document.getElementById(`todo-modal`));
+    modal.show();
   };
 
-  const hideModal = (modalInput) => {
-    const modal = {
-      addTask: addTask,
-      addProject: addProject,
-      editProject: editProject,
-      editTask: editTask,
-    }[modalInput];
+  const hide = () => {
     modal.hide();
     setTimeout(() => {
       container.innerHTML = "";
@@ -308,10 +288,9 @@ const modals = (() => {
   return {
     renderEditProject,
     renderAddProject,
-    hideModal,
+    hide,
     renderEditTask,
     renderAddTask,
-    container,
   };
 })();
 
